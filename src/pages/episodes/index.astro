@@ -1,0 +1,65 @@
+---
+// 节目列表页：构建时从播客 feed URL 拉取 RSS 解析生成，每集带播放器。
+// 播放地址取自 RSS 的 enclosure 绝对 URL，直接使用。
+import MainGridLayout from "@layouts/MainGridLayout.astro";
+import { getPodcastFeed } from "@utils/podcast";
+import { Icon } from "astro-icon/components";
+import { podcastConfig } from "@/config";
+
+const { channel, episodes } = await getPodcastFeed();
+
+function formatDate(pubDate: string): string {
+	const d = new Date(pubDate);
+	if (Number.isNaN(d.getTime())) return pubDate;
+	return d.toLocaleDateString("zh-CN", {
+		year: "numeric",
+		month: "long",
+		day: "numeric",
+	});
+}
+---
+<MainGridLayout title={`节目列表 - ${channel.title}`} description={channel.description}>
+    <div class="flex flex-col gap-4 mb-4">
+        <div class="card-base rounded-[var(--radius-large)] p-6 md:p-8 onload-animation">
+            <div class="flex items-center gap-3 mb-2">
+                <Icon name="material-symbols:podcasts-rounded" class="text-3xl text-[var(--primary)]" />
+                <h1 class="text-2xl md:text-3xl font-bold text-black/90 dark:text-white/90">节目列表</h1>
+            </div>
+            <p class="text-black/60 dark:text-white/60">
+                {channel.title} · 共 {episodes.length} 期 · 数据来自 <a href={podcastConfig.feedUrl} target="_blank" rel="noopener" class="text-[var(--primary)] hover:underline">播客 feed</a>
+            </p>
+        </div>
+
+        {episodes.map((ep, i) => (
+            <article class="card-base rounded-[var(--radius-large)] p-6 md:p-8 onload-animation" style={`animation-delay: calc(var(--content-delay) + ${i * 50}ms)`}>
+                <div class="flex flex-col gap-3">
+                    <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                        <h2 class="text-xl font-bold text-black/90 dark:text-white/90">{ep.title}</h2>
+                    </div>
+                    <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm text-black/50 dark:text-white/50">
+                        {ep.pubDate && <span class="flex items-center gap-1">
+                            <Icon name="material-symbols:calendar-month-outline-rounded" />
+                            {formatDate(ep.pubDate)}
+                        </span>}
+                        {ep.duration && <span class="flex items-center gap-1">
+                            <Icon name="material-symbols:schedule-outline-rounded" />
+                            {ep.duration}
+                        </span>}
+                    </div>
+                    {ep.description && (
+                        <p class="text-black/70 dark:text-white/70 leading-relaxed">{ep.description}</p>
+                    )}
+                    {ep.audioUrl && (
+                        <audio controls controlsList="nodownload" src={ep.audioUrl} class="w-full mt-1" preload="none"></audio>
+                    )}
+                </div>
+            </article>
+        ))}
+
+        {episodes.length === 0 && (
+            <div class="card-base rounded-[var(--radius-large)] p-8 text-center text-black/50 dark:text-white/50 onload-animation">
+                暂无节目。播客仓库发布新节目后，重新构建本站即可同步。
+            </div>
+        )}
+    </div>
+</MainGridLayout>

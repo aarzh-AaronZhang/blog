@@ -1,0 +1,62 @@
+---
+import { getPodcastFeed } from "@utils/podcast";
+import { Icon } from "astro-icon/components";
+// 首页播客展示区：封面、简介、订阅按钮。数据构建时从播客 feed URL 拉取解析。
+// 封面优先用 podcastConfig.coverUrl，留空则用 feed 里 itunes:image 的图。
+// feed 地址 / 订阅链接在 src/config.ts 的 podcastConfig 里填写。
+import { podcastConfig } from "@/config";
+
+const { channel, episodes } = await getPodcastFeed();
+const coverSrc = podcastConfig.coverUrl || channel.image || "";
+---
+<div class="card-base rounded-[var(--radius-large)] overflow-hidden mb-4 onload-animation">
+    <div class="flex flex-col md:flex-row gap-6 p-6 md:p-8 items-center md:items-start">
+        {coverSrc && (
+            <img
+                src={coverSrc}
+                alt={channel.title}
+                class="w-40 h-40 md:w-48 md:h-48 rounded-2xl object-cover shadow-lg shrink-0"
+                loading="eager"
+            />
+        )}
+        <div class="flex flex-col gap-3 text-center md:text-left min-w-0">
+            <div class="text-xs font-bold uppercase tracking-widest text-[var(--primary)]">
+                🎙️ 播客
+            </div>
+            <h1 class="text-2xl md:text-3xl font-bold text-black/90 dark:text-white/90">
+                {channel.title}
+            </h1>
+            {channel.author && (
+                <div class="text-sm text-black/50 dark:text-white/50">主播：{channel.author}</div>
+            )}
+            <p class="text-black/70 dark:text-white/70 leading-relaxed">
+                {channel.description}
+            </p>
+            <div class="text-sm text-black/50 dark:text-white/50">
+                已更新 {episodes.length} 期节目
+            </div>
+            <div class="flex flex-wrap gap-3 justify-center md:justify-start mt-1">
+                <a href="/episodes/" class="btn-regular rounded-lg px-4 py-2 font-bold flex items-center gap-2">
+                    <Icon name="material-symbols:playlist-play-rounded" class="text-xl" />
+                    收听节目
+                </a>
+                <a href={podcastConfig.feedUrl} target="_blank" rel="noopener" class="btn-card rounded-lg px-4 py-2 font-bold flex items-center gap-2">
+                    <Icon name="material-symbols:rss-feed-rounded" class="text-xl" />
+                    RSS 订阅
+                </a>
+                {podcastConfig.applePodcastsUrl && (
+                    <a href={podcastConfig.applePodcastsUrl} target="_blank" rel="noopener" class="btn-card rounded-lg px-4 py-2 font-bold flex items-center gap-2">
+                        <Icon name="fa6-brands:apple" class="text-xl" />
+                        Apple Podcasts
+                    </a>
+                )}
+                {podcastConfig.spotifyUrl && (
+                    <a href={podcastConfig.spotifyUrl} target="_blank" rel="noopener" class="btn-card rounded-lg px-4 py-2 font-bold flex items-center gap-2">
+                        <Icon name="fa6-brands:spotify" class="text-xl" />
+                        Spotify
+                    </a>
+                )}
+            </div>
+        </div>
+    </div>
+</div>
